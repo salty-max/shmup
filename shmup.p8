@@ -6,7 +6,7 @@ function _init()
 	posy=64
 	vx=0
 	vy=0
-	speed=2
+	speed=1
 end
 
 function _update()
