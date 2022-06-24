@@ -2,14 +2,56 @@ pico-8 cartridge // http://www.pico-8.com
 version 33
 __lua__
 function _init()
+	posx=64
+	posy=64
+	vx=0
+	vy=0
+	speed=2
 end
 
 function _update()
+	vx=0
+	vy=0
+	
+	if btn(0) then
+		vx=-speed
+	end
+	
+	if btn(1) then
+		vx=speed
+	end
+	
+	if btn(2) then
+		vy=-speed
+	end
+	
+	if btn(3) then
+		vy=speed
+	end
+	
+	posx+=vx
+	posy+=vy
+	
+	if posx>127 then
+		posx=-7
+	end
+	
+	if posx<-7 then
+		posx=127
+	end
+	
+	if posy<-7 then
+		posy=127
+	end
+	
+	if posy>127 then
+		posy=-7
+	end
 end
 
 function _draw()
 	cls(0)
-	spr(1,64-4,64-4)
+	spr(1,posx,posy)
 end
 __gfx__
 00000000000220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
