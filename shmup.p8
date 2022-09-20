@@ -2,8 +2,8 @@ pico-8 cartridge // http://www.pico-8.com
 version 33
 __lua__
 function _init()
-	shipx = 64
-	shipy = 64
+	shipx = 60
+	shipy = 60
 	shipvx = 0
 	shipvy = 0
 	shipspd = 2
@@ -11,7 +11,7 @@ function _init()
 
 	flamespr = 5
 
-	bullx = 64
+	bullx = 60
 	bully = -10
 	bullspd = 4
 
@@ -20,6 +20,10 @@ function _init()
 	score = 1664
 	maxlives = 3
 	lives = 1
+
+	stars = {}
+
+	init_starfield()
 end
 
 function _update()
@@ -69,6 +73,9 @@ function _update()
 	if muzzle > 0 then
 		muzzle-=1
 	end
+
+	-- stars animation
+	update_starfield()
 	
 	if shipx > 127 then
 		shipx = -7
@@ -89,8 +96,8 @@ end
 
 function _draw()
 	cls(0)
-	-- debug screen border
-	rect(0, 0, 127, 127, 1)
+
+	draw_starfield()
 
 	spr(shipspr, shipx, shipy)
 	spr(flamespr, shipx, shipy + 8)
@@ -111,6 +118,50 @@ function _draw()
 	local scoretext = "score "..score
 	print(scoretext, 127 - (#scoretext * 4), 3, 12)
 end
+
+-->8
+-- starfield
+
+function create_star(x, y, spd, c)
+	local s = {
+		x = x,
+		y = y,
+		spd = spd
+	}
+	add(stars, s)
+end
+
+function init_starfield()
+	for i = 1, 100 do
+		create_star(flr(rnd(128)), flr(rnd(128)), rnd(1.5) + 0.5)
+	end
+end
+
+function draw_starfield()
+	for star in all(stars) do
+		local c = 6
+		-- color brightness based on speed
+		if star.spd < 1 then
+			c = 1
+		elseif star.spd < 1.5 then
+			c = 13
+		end
+		pset(star.x, star.y, c)
+	end
+end
+
+function update_starfield()
+	for star in all(stars) do
+		star.y += star.spd
+
+		-- if star is out of bound, delete it and create a new random one at the top
+		if star.y > 128 then
+			del(stars, star)
+			create_star(flr(rnd(128)), 0, rnd(1.5) + 0.5)
+		end
+	end
+end
+
 __gfx__
 00000000000220000002200000022000000000000000000000000000000000000000000000000000000000000000000000000000088008800880088000000000
 000000000028820000288200002882000000000000077000000770000007700000c77c0000077000000000000000000000000000800880088888888800000000
