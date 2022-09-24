@@ -2,6 +2,16 @@ pico-8 cartridge // http://www.pico-8.com
 version 33
 __lua__
 function _init()
+	mode = "start"
+	blinkt = 1
+
+	stars = {}
+	init_starfield()
+end
+
+function start_game()
+	mode = "game"
+
 	shipx = 60
 	shipy = 60
 	shipvx = 0
@@ -20,107 +30,33 @@ function _init()
 	score = 1664
 	maxlives = 3
 	lives = 1
-
-	stars = {}
-
-	init_starfield()
 end
 
 function _update()
-	shipvx = 0
-	shipvy = 0
-	shipspr = 2
-	
-	if btn(0) then
-		shipvx = -shipspd
-		shipspr = 1
-	end
-	
-	if btn(1) then
-		shipvx = shipspd
-		shipspr = 3
-	end
-	
-	if btn(2) then
-		shipvy = -shipspd
-	end
-	
-	if btn(3) then
-		shipvy = shipspd
-	end
-	
-	-- shoot
-	if btnp(5) then
-		sfx(0)
-		bullx = shipx
-		bully = shipy - 4
-		muzzle = 6
-	end
-	
-	shipx += shipvx
-	shipy += shipvy
-	
-	bully -= bullspd
+	blinkt += 1
 
-	-- animate engine
-	flamespr += 1
-
-	if flamespr > 9 then
-		flamespr = 5
-	end
-
-	-- muzzle flash
-	if muzzle > 0 then
-		muzzle-=1
-	end
-
-	-- stars animation
-	update_starfield()
-	
-	if shipx > 127 then
-		shipx = -7
-	end
-	
-	if shipx < -7 then
-		shipx = 127
-	end
-	
-	if shipy < -7 then
-		shipy = 127
-	end
-	
-	if shipy > 127 then
-		shipy = -7
+	if mode == "game" then
+		update_game()
+	elseif mode == "start" then
+		update_start()
+	else
+		update_gameover()
 	end
 end
 
 function _draw()
 	cls(0)
-
-	draw_starfield()
-
-	spr(shipspr, shipx, shipy)
-	spr(flamespr, shipx, shipy + 8)
-
-	spr(16, bullx, bully)
-	if muzzle > 0 then
-		circfill(shipx + 3, shipy - 2, muzzle, 7)
+	if mode == "game" then
+		draw_game()
+	elseif mode == "start" then
+		draw_start()
+	else
+		draw_gameover()
 	end
-
-	local heartspr = 14
-	for i = 1, maxlives do
-		if lives < i then
-			heartspr = 13
-		end
-		spr(heartspr, i * 9 - 7, 2)
-	end
-
-	local scoretext = "score "..score
-	print(scoretext, 127 - (#scoretext * 4), 3, 12)
 end
 
 -->8
--- starfield
+-- tools
 
 function create_star(x, y, spd, c)
 	local s = {
@@ -159,6 +95,147 @@ function update_starfield()
 			del(stars, star)
 			create_star(flr(rnd(128)), 0, rnd(1.5) + 0.5)
 		end
+	end
+end
+
+function blink()
+	local ct = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 7, 7, 6, 6}
+	if blinkt > #ct then
+		blinkt = 1
+	end
+	return ct[blinkt]
+end
+
+-->8
+-- update
+function update_game()
+	shipvx = 0
+	shipvy = 0
+	shipspr = 2
+	
+	if btn(0) then
+		shipvx = -shipspd
+		shipspr = 1
+	end
+	
+	if btn(1) then
+		shipvx = shipspd
+		shipspr = 3
+	end
+	
+	if btn(2) then
+		shipvy = -shipspd
+	end
+	
+	if btn(3) then
+		shipvy = shipspd
+	end
+
+	if btnp(4) then
+		mode = "gameover"
+	end
+	
+	-- shoot
+	if btnp(5) then
+		sfx(0)
+		bullx = shipx
+		bully = shipy - 4
+		muzzle = 6
+	end
+	
+	shipx += shipvx
+	shipy += shipvy
+	
+	bully -= bullspd
+
+	-- animate engine
+	flamespr += 1
+
+	if flamespr > 9 then
+		flamespr = 5
+	end
+
+	-- muzzle flash
+	if muzzle > 0 then
+		muzzle -= 1
+	end
+
+	-- stars animation
+	update_starfield()
+	
+	if shipx > 127 then
+		shipx = -7
+	end
+	
+	if shipx < -7 then
+		shipx = 127
+	end
+	
+	if shipy < -7 then
+		shipy = 127
+	end
+	
+	if shipy > 127 then
+		shipy = -7
+	end
+end
+
+function update_start()
+	if btnp(5) then
+		start_game()
+	end
+
+	update_starfield()
+end
+
+function update_gameover()
+	if btnp(5) then
+		start_game()
+	end
+
+	update_starfield()
+end
+
+-->8
+-- draw
+function draw_game()
+	draw_starfield()
+
+	spr(shipspr, shipx, shipy)
+	spr(flamespr, shipx, shipy + 8)
+
+	spr(16, bullx, bully)
+	if muzzle > 0 then
+		circfill(shipx + 3, shipy - 2, muzzle, 7)
+	end
+
+	draw_ui()
+
+	local scoretext = "score "..score
+	print(scoretext, 127 - (#scoretext * 4), 3, 12)
+end
+
+function draw_start()
+	draw_starfield()
+	rect(0, 0, 127, 127, 1)
+	print("shmup", 52, 48, 12)
+	print("press ❎ to start", 30, 80, blink())
+end
+
+function draw_gameover()
+	draw_starfield()
+	rect(0, 0, 127, 127, 8)
+	print("game over", 46, 48, 8)
+	print("press ❎ to continue", 24, 80, blink())
+end
+
+function draw_ui()
+	local heartspr = 14
+	for i = 1, maxlives do
+		if lives < i then
+			heartspr = 13
+		end
+		spr(heartspr, i * 9 - 7, 2)
 	end
 end
 
