@@ -29,10 +29,15 @@ function start_game()
 
 	muzzle = 0
 
+	shoot_cd = 0
+	fire_rate = 5
+
 	score = 0
 	maxlives = 3
 	lives = 3
+
 	invul = 0
+	invul_duration = 60
 
 	bullets = {}
 	enemies = {}
@@ -198,15 +203,20 @@ function update_game()
 	end
 	
 	-- shoot
-	if btnp(5) then
-		add(bullets, {
-			x = player.x,
-			y = player.y - 4,
-			spd = 4,
-			spr = 16
-		})
-		sfx(0)
-		muzzle = 6
+	if btn(5) then
+		if shoot_cd <= 0 then
+			add(bullets, {
+				x = player.x,
+				y = player.y - 4,
+				spd = 4,
+				spr = 16
+			})
+			sfx(0)
+			muzzle = 6
+			shoot_cd = fire_rate
+		else
+			shoot_cd -= 1
+		end
 	end
 	
 	for bullet in all(bullets) do
@@ -248,7 +258,7 @@ function update_game()
 				sfx(1)
 				del(enemies, enemy)
 				lives -= 1
-				invul = 60
+				invul = invul_duration
 				spawn_enemy()
 			end
 		end
