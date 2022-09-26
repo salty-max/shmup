@@ -214,9 +214,12 @@ function update_game()
 			sfx(0)
 			muzzle = 6
 			shoot_cd = fire_rate
-		else
-			shoot_cd -= 1
 		end
+	end
+
+	shoot_cd -= 1
+	if shoot_cd < 0 then
+		shoot_cd = 0
 	end
 	
 	for bullet in all(bullets) do
@@ -240,6 +243,7 @@ function update_game()
 		end
 	end
 
+	-- collision enemies x bullets
 	for enemy in all(enemies) do
 		for bullet in all(bullets) do
 			if collide(bullet ,enemy) then
@@ -252,6 +256,7 @@ function update_game()
 		end
 	end
 
+	-- collision player x enemies
 	if invul <= 0 then
 		for enemy in all(enemies) do
 			if collide(enemy, player) then
@@ -274,7 +279,7 @@ function update_game()
 		mode = "gameover"
 	end
 
-	-- animate engine
+	-- engine animation
 	flamespr += 1
 
 	if flamespr > 9 then
