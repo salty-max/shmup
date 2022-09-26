@@ -12,18 +12,16 @@ end
 function start_game()
 	mode = "game"
 
-	shipx = 60
-	shipy = 60
-	shipvx = 0
-	shipvy = 0
-	shipspd = 2
-	shipspr = 2
+	player = {
+		x = 60,
+		y = 60,
+		vx = 0,
+		vy = 0,
+		spd = 2,
+		spr = 3
+	}
 
 	flamespr = 5
-
-	bullx = 60
-	bully = -10
-	bullspd = 4
 
 	muzzle = 0
 
@@ -116,29 +114,40 @@ function blink()
 	return ct[blinkt]
 end
 
+function draw_spr(s)
+	spr(s.spr, s.x, s.y)
+end
+
+function draw_list(l)
+	for i in all(l) do
+		draw_spr(i)
+	end
+end
+
 -->8
 -- update
+
 function update_game()
-	shipvx = 0
-	shipvy = 0
-	shipspr = 2
+	player.vx = 0
+	player.vy = 0
+	player.spr = 2
 	
 	if btn(0) then
-		shipvx = -shipspd
-		shipspr = 1
+		player.vx = -player.spd
+		player.spr = 1
 	end
 	
 	if btn(1) then
-		shipvx = shipspd
-		shipspr = 3
+		player.vx = player.spd
+		player.spr = 3
 	end
 	
 	if btn(2) then
-		shipvy = -shipspd
+		player.vy = -player.spd
 	end
 	
 	if btn(3) then
-		shipvy = shipspd
+		player.vy = player.spd
 	end
 
 	if btnp(4) then
@@ -148,18 +157,20 @@ function update_game()
 	-- shoot
 	if btnp(5) then
 		add(bullets, {
-			x = shipx,
-			y = shipy - 4
+			x = player.x,
+			y = player.y - 4,
+			spd = 4,
+			spr = 16
 		})
 		sfx(0)
 		muzzle = 6
 	end
 	
-	shipx += shipvx
-	shipy += shipvy
+	player.x += player.vx
+	player.y += player.vy
 	
 	for bullet in all(bullets) do
-		bullet.y -= bullspd
+		bullet.y -= bullet.spd
 
 		if bullet.y < -8 then
 			del(bullets, bullet)
@@ -169,7 +180,7 @@ function update_game()
 	-- moving enemies
 	for enemy in all(enemies) do
 		enemy.y += enemy.spd
-		enemy.spr += 0.3
+		enemy.spr += 0.2
 		if enemy.spr >= 26 then
 			enemy.spr = 21
 		end
@@ -193,20 +204,20 @@ function update_game()
 	-- stars animation
 	update_starfield()
 	
-	if shipx > 127 then
-		shipx = -7
+	if player.x > 127 then
+		player.x = -7
 	end
 	
-	if shipx < -7 then
-		shipx = 127
+	if player.x < -7 then
+		player.x = 127
 	end
 	
-	if shipy < -7 then
-		shipy = 127
+	if player.y < -7 then
+		player.y = 127
 	end
 	
-	if shipy > 127 then
-		shipy = -7
+	if player.y > 127 then
+		player.y = -7
 	end
 end
 
@@ -226,24 +237,23 @@ function update_gameover()
 	update_starfield()
 end
 
+
+
 -->8
 -- draw
+
 function draw_game()
 	draw_starfield()
 
-	spr(shipspr, shipx, shipy)
-	spr(flamespr, shipx, shipy + 8)
+	draw_spr(player)
+	spr(flamespr, player.x, player.y + 8)
 
-	for enemy in all(enemies) do
-		spr(enemy.spr, enemy.x, enemy.y)
-	end
+	draw_list(enemies)
 
-	for bullet in all(bullets) do
-		spr(16, bullet.x, bullet.y)
-	end
+	draw_list(bullets)
 
 	if muzzle > 0 then
-		circfill(shipx + 3, shipy - 2, muzzle, 7)
+		circfill(player.x + 3, player.y - 2, muzzle, 7)
 	end
 
 	draw_ui()
