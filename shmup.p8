@@ -27,7 +27,7 @@ function start_game()
 
 	score = 1664
 	maxlives = 3
-	lives = 1
+	lives = 3
 
 	bullets = {}
 	enemies = {}
@@ -124,6 +124,24 @@ function draw_list(l)
 	end
 end
 
+function collide(a, b)
+	local a_left = a.x
+	local a_top = a.y
+	local a_right = a.x + 7
+	local a_bottom = a.y + 7
+
+	local b_left = b.x
+	local b_top = b.y
+	local b_right = b.x + 7
+	local b_bottom = b.y + 7
+	
+	if a_left > b_right or b_left > a_right or a_top > b_bottom or b_top > a_bottom then
+		return false
+	end
+
+	return true
+end
+
 -->8
 -- update
 
@@ -150,8 +168,23 @@ function update_game()
 		player.vy = player.spd
 	end
 
-	if btnp(4) then
-		mode = "gameover"
+	player.x += player.vx
+	player.y += player.vy
+
+	if player.x > 127 then
+		player.x = -7
+	end
+	
+	if player.x < -7 then
+		player.x = 127
+	end
+
+	if player.y < 0 then
+		player.y = 0
+	end
+	
+	if player.y > 120 then
+		player.y = 120
 	end
 	
 	-- shoot
@@ -165,9 +198,6 @@ function update_game()
 		sfx(0)
 		muzzle = 6
 	end
-	
-	player.x += player.vx
-	player.y += player.vy
 	
 	for bullet in all(bullets) do
 		bullet.y -= bullet.spd
@@ -189,6 +219,32 @@ function update_game()
 		end
 	end
 
+	for enemy in all(enemies) do
+		if collide(enemy, player) then
+			sfx(1)
+			del(enemies, enemy)
+			lives -= 1
+		end
+	end
+	
+	for enemy in all(enemies) do
+		for bullet in all(bullets) do
+			if collide(bullet ,enemy) then
+				del(bullets, bullet)
+				del(enemies, enemy)
+				score += 10
+			end
+		end
+	end
+
+	if (lives <= 0) then
+		mode = "gameover"
+	end
+
+	if btnp(4) then
+		mode = "gameover"
+	end
+
 	-- animate engine
 	flamespr += 1
 
@@ -203,22 +259,6 @@ function update_game()
 
 	-- stars animation
 	update_starfield()
-	
-	if player.x > 127 then
-		player.x = -7
-	end
-	
-	if player.x < -7 then
-		player.x = 127
-	end
-	
-	if player.y < -7 then
-		player.y = 127
-	end
-	
-	if player.y > 127 then
-		player.y = -7
-	end
 end
 
 function update_start()
@@ -236,8 +276,6 @@ function update_gameover()
 
 	update_starfield()
 end
-
-
 
 -->8
 -- draw
@@ -305,3 +343,4 @@ __gfx__
 00999900000000000000000000000000000000000300003003300330300000033000000303000030000000000000000000000000000000000000000000000000
 __sfx__
 0001000038550365503555033550315502f5502c5502a550285502655024550205501e5501c550195501655014550105500e5500b550085500555002550005502450000000000000000000000000000000000000
+000100002e6502b65025650226501f6401c64019640166401363012630106300e6300c6200b620096200662004610026100161000610006000060000600026000260001600006000060000600006000060000600
