@@ -30,6 +30,8 @@ function start_game()
 	score = 1664
 	maxlives = 3
 	lives = 1
+
+	bullets = {}
 end
 
 function _update()
@@ -137,16 +139,24 @@ function update_game()
 	
 	-- shoot
 	if btnp(5) then
+		add(bullets, {
+			x = shipx,
+			y = shipy - 4
+		})
 		sfx(0)
-		bullx = shipx
-		bully = shipy - 4
 		muzzle = 6
 	end
 	
 	shipx += shipvx
 	shipy += shipvy
 	
-	bully -= bullspd
+	for bullet in all(bullets) do
+		bullet.y -= bullspd
+
+		if bullet.y < -8 then
+			del(bullets, bullet)
+		end
+	end
 
 	-- animate engine
 	flamespr += 1
@@ -204,7 +214,10 @@ function draw_game()
 	spr(shipspr, shipx, shipy)
 	spr(flamespr, shipx, shipy + 8)
 
-	spr(16, bullx, bully)
+	for bullet in all(bullets) do
+		spr(16, bullet.x, bullet.y)
+	end
+
 	if muzzle > 0 then
 		circfill(shipx + 3, shipy - 2, muzzle, 7)
 	end
