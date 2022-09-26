@@ -1,6 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 33
 __lua__
+
+
 function _init()
 	mode = "start"
 	blinkt = 1
@@ -25,19 +27,14 @@ function start_game()
 
 	muzzle = 0
 
-	score = 1664
+	score = 0
 	maxlives = 3
 	lives = 3
 
 	bullets = {}
 	enemies = {}
-	local enemy = {
-		x = 60,
-		y = 5,
-		spr = 21,
-		spd = 1
-	}
-	add(enemies, enemy)
+
+	spawn_enemy()
 end
 
 function _update()
@@ -142,6 +139,15 @@ function collide(a, b)
 	return true
 end
 
+function spawn_enemy()
+	add(enemies, {
+		x = flr(rnd(120)),
+		y = -8,
+		spd = 1,
+	  spr = 21
+	})
+end
+
 -->8
 -- update
 
@@ -216,6 +222,19 @@ function update_game()
 		end
 		if enemy.y > 128 then
 			del(enemies, enemy)
+			spawn_enemy()
+		end
+	end
+
+	for enemy in all(enemies) do
+		for bullet in all(bullets) do
+			if collide(bullet ,enemy) then
+				del(bullets, bullet)
+				del(enemies, enemy)
+				spawn_enemy()
+				score += 10
+				sfx(2)
+			end
 		end
 	end
 
@@ -224,16 +243,7 @@ function update_game()
 			sfx(1)
 			del(enemies, enemy)
 			lives -= 1
-		end
-	end
-	
-	for enemy in all(enemies) do
-		for bullet in all(bullets) do
-			if collide(bullet ,enemy) then
-				del(bullets, bullet)
-				del(enemies, enemy)
-				score += 10
-			end
+			spawn_enemy()
 		end
 	end
 
@@ -342,5 +352,6 @@ __gfx__
 09aaaa90000000000000000000000000000000000303303003033030030330300303303003033030000000000000000000000000000000000000000000000000
 00999900000000000000000000000000000000000300003003300330300000033000000303000030000000000000000000000000000000000000000000000000
 __sfx__
-0001000038550365503555033550315502f5502c5502a550285502655024550205501e5501c550195501655014550105500e5500b550085500555002550005502450000000000000000000000000000000000000
+0001000038550365503555033550315402f5402c5402a540285302653024530205301e5201c520195201652014510105100e5100b510085100551002510005102450000000000000000000000000000000000000
 000100002e6502b65025650226501f6401c64019640166401363012630106300e6300c6200b620096200662004610026100161000610006000060000600026000260001600006000060000600006000060000600
+000100002b7500d65026750186300b720046200272001720007100063000600006300000000630000000063000000006302170000630000000063000000006300000000000000000000000000000000000000000
