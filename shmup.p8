@@ -6,6 +6,7 @@ __lua__
 function _init()
 	mode = "start"
 	blinkt = 1
+	t = 0
 
 	stars = {}
 	init_starfield()
@@ -13,6 +14,7 @@ end
 
 function start_game()
 	mode = "game"
+	t = 0
 
 	player = {
 		x = 60,
@@ -30,6 +32,7 @@ function start_game()
 	score = 0
 	maxlives = 3
 	lives = 3
+	invul = 0
 
 	bullets = {}
 	enemies = {}
@@ -152,6 +155,7 @@ end
 -- update
 
 function update_game()
+	t += 1
 	player.vx = 0
 	player.vy = 0
 	player.spr = 2
@@ -238,13 +242,18 @@ function update_game()
 		end
 	end
 
-	for enemy in all(enemies) do
-		if collide(enemy, player) then
-			sfx(1)
-			del(enemies, enemy)
-			lives -= 1
-			spawn_enemy()
+	if invul <= 0 then
+		for enemy in all(enemies) do
+			if collide(enemy, player) then
+				sfx(1)
+				del(enemies, enemy)
+				lives -= 1
+				invul = 60
+				spawn_enemy()
+			end
 		end
+	else
+		invul -= 1
 	end
 
 	if (lives <= 0) then
@@ -293,8 +302,16 @@ end
 function draw_game()
 	draw_starfield()
 
-	draw_spr(player)
-	spr(flamespr, player.x, player.y + 8)
+	if invul <= 0 then
+		draw_spr(player)
+		spr(flamespr, player.x, player.y + 8)
+	else
+		-- blinking when invulnerable
+		if sin(t / 5) < 0 then
+			draw_spr(player)
+			spr(flamespr, player.x, player.y + 8)
+		end
+	end
 
 	draw_list(enemies)
 
