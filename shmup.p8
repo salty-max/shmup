@@ -175,40 +175,20 @@ function explode(ex, ey, blue)
 
 	for i = 1, 30 do
 		add(particles, {
-		x = ex,
-		y = ey,
-		vx = (rnd() - 0.5) * 4,
-		vy = (rnd() - 0.5) * 4,
-		age = rnd(2),
-		max_age = 10 + rnd(10),
-		size = 1 + rnd(3),
-		blue = blue
-	})
+			x = ex,
+			y = ey,
+			vx = (rnd() - 0.5) * 6,
+			vy = (rnd() - 0.5) * 6,
+			age = rnd(2),
+			max_age = 10 + rnd(10),
+			size = 1 + rnd(3),
+			blue = blue
+		})
 	end
 
+	sparkle(ex, ey, 20, 6)
+
 	big_shwave(ex, ey)
-end
-
-function shwave(swx, swy)
-	add(shwaves, {
-		x = swx,
-		y = swy,
-		c = 9,
-		r = 3,
-		max_r = 6,
-		spd = 1 -- spread speed
-	})
-end
-
-function big_shwave(swx, swy)
-	add(shwaves, {
-		x = swx,
-		y = swy,
-		c = 6,
-		r = 3,
-		max_r = 25,
-		spd = 3.5 -- spread speed
-	})
 end
 
 function page_red(age)
@@ -253,6 +233,45 @@ function page_blue(age)
 	end
 
 	return c
+end
+
+function shwave(swx, swy)
+	add(shwaves, {
+		x = swx,
+		y = swy,
+		c = 9,
+		r = 3,
+		max_r = 6,
+		spd = 1 -- spread speed
+	})
+end
+
+function big_shwave(swx, swy)
+	add(shwaves, {
+		x = swx,
+		y = swy,
+		c = 6,
+		r = 3,
+		max_r = 25,
+		spd = 3.5 -- spread speed
+	})
+end
+
+function sparkle(sx, sy, sn, sc)
+	for i = 1, sn do
+		add(particles, {
+			x = sx,
+			y = sy,
+			vx = (rnd() - 0.5) * 10,
+			vy = (rnd() - 0.5) * 10,
+			c = sc,
+			age = rnd(2),
+			max_age = 10 + rnd(10),
+			size = 1 + rnd(3),
+			blue = blue,
+			spark = true
+		})
+	end
 end
 
 -->8
@@ -350,6 +369,7 @@ function update_game()
 				enemy.hp -= 1
 				enemy.flash = 2
 				shwave(bullet.x + 4, bullet.y + 4)
+				sparkle(enemy.x + 4, enemy.y + 4, 4, 3)
 				if enemy.hp <= 0 then
 					score += enemy.scr
 					sfx(2)
@@ -497,7 +517,11 @@ function draw_explosions()
 			pc = page_red(p.age)
 		end
 
-		circfill(p.x, p.y, p.size, pc)
+		if p.spark then
+			pset(p.x, p.y, p.c)
+		else
+			circfill(p.x, p.y, p.size, pc)
+		end
 
 		p.x += p.vx
 		p.y += p.vy
