@@ -13,8 +13,10 @@ function _init()
 end
 
 function start_game()
-	mode = "game"
 	t = 0
+	wave = 0
+
+	next_wave()
 
 	player = {
 		x = 60,
@@ -43,8 +45,6 @@ function start_game()
 	enemies = {}
 	particles = {}
 	shwaves = {}
- 
-	spawn_enemy()
 end
 
 function _update()
@@ -54,6 +54,10 @@ function _update()
 		update_game()
 	elseif mode == "start" then
 		update_start()
+	elseif mode == "wavetext" then
+		update_wavetext()
+	elseif mode == "win" then
+		update_win()
 	else
 		update_gameover()
 	end
@@ -65,6 +69,10 @@ function _draw()
 		draw_game()
 	elseif mode == "start" then
 		draw_start()
+	elseif mode == "wavetext" then
+		draw_wavetext()
+	elseif mode == "win" then
+		draw_win()
 	else
 		draw_gameover()
 	end
@@ -147,18 +155,6 @@ function collide(a, b)
 	end
 
 	return true
-end
-
-function spawn_enemy()
-	add(enemies, {
-		x = flr(rnd(120)),
-		y = -8,
-		spd = 1,
-	  spr = 21,
-		hp = 2,
-		scr = 30,
-		flash = 0
-	})
 end
 
 function explode(ex, ey, blue)
@@ -274,6 +270,14 @@ function sparkle(sx, sy, sn, sc)
 	end
 end
 
+function print_center(s, y, c, custom_x)
+	local x = 64
+	if custom_x then
+		x = custom_x
+	end
+	print(s, x - ((#s / 2) * 4), y, c)
+end
+
 -->8
 -- update
 
@@ -357,7 +361,6 @@ function update_game()
 		end
 		if enemy.y > 128 then
 			del(enemies, enemy)
-			spawn_enemy()
 		end
 	end
 
@@ -370,12 +373,16 @@ function update_game()
 				enemy.flash = 2
 				shwave(bullet.x + 4, bullet.y + 4)
 				sparkle(enemy.x + 4, enemy.y + 4, 4, 3)
+
 				if enemy.hp <= 0 then
 					score += enemy.scr
 					sfx(2)
 					del(enemies, enemy)
 					explode(enemy.x + 4, enemy.y + 4)
-					spawn_enemy()
+
+					if #enemies <= 0 then
+						next_wave()
+					end
 				else
 					score += 5
 					sfx(3)
@@ -393,7 +400,10 @@ function update_game()
 				explode(player.x + 4, player.y + 4, true)
 				lives -= 1
 				invul = invul_duration
-				spawn_enemy()
+
+				if #enemies <= 0 then
+					next_wave()
+				end
 			end
 		end
 	else
@@ -425,19 +435,57 @@ function update_game()
 end
 
 function update_start()
-	if btnp(5) then
-		start_game()
+	update_starfield()
+	if not btn(4) and not btn(5) then
+		btn_released = true
 	end
 
+	if btn_released then
+		if btnp(4) or btnp(5) then
+			start_game()
+			btn_released = false
+		end
+	end
+end
+
+function update_wavetext()
+	update_game()
+
+	wavetext_t -= 1
+
+	if wavetext_t <= 0 then
+		mode = "game"
+		spawn_wave()
+	end
+end
+
+function update_win()
 	update_starfield()
+	if not btn(4) and not btn(5) then
+		btn_released = true
+	end
+
+	if btn_released then
+		if btnp(4) or btnp(5) then
+			mode = "start"
+			btn_released = false
+		end
+	end
 end
 
 function update_gameover()
-	if btnp(5) then
-		start_game()
+	update_starfield()
+
+	if not btn(4) and not btn(5) then
+		btn_released = true
 	end
 
-	update_starfield()
+	if btn_released then
+		if btnp(4) or btnp(5) then
+			mode = "start"
+			btn_released = false
+		end
+	end
 end
 
 -->8
@@ -486,15 +534,28 @@ end
 function draw_start()
 	draw_starfield()
 	rect(0, 0, 127, 127, 1)
-	print("shmup", 52, 48, 12)
-	print("press ❎ to start", 30, 80, blink())
+	print_center("shmup", 48, 12)
+	print_center("press any key to start", 80, blink())
+end
+
+function draw_wavetext()
+	draw_game()
+	print_center("wave "..wave, 48, blink())
+end
+
+function draw_win()
+	draw_starfield()
+	rect(0, 0, 127, 127, 11)
+	print_center("you win!", 48, 11)
+	print_center("score "..score, 64, 12)
+	print_center("press any key to continue", 80, blink())
 end
 
 function draw_gameover()
 	draw_starfield()
 	rect(0, 0, 127, 127, 8)
-	print("game over", 46, 48, 8)
-	print("press ❎ to continue", 24, 80, blink())
+	print_center("game over", 48, 8)
+	print_center("press any key to continue", 80, blink())
 end
 
 function draw_ui()
@@ -548,6 +609,36 @@ function draw_shwaves()
 		if sw.r > sw.max_r then
 			del(shwaves, sw)
 		end
+	end
+end
+
+-->8
+-- waves and enemies
+
+function spawn_enemy(ex, ey)
+	add(enemies, {
+		x = ex,
+		y = ey,
+		spd = 1,
+	  spr = 21,
+		hp = 2,
+		scr = 30,
+		flash = 0
+	})
+end
+
+function spawn_wave()
+	spawn_enemy(flr(rnd(120)), -8)
+end
+
+function next_wave()
+	wave += 1
+
+	if wave > 4 then
+		mode = "win"
+	else
+		mode = "wavetext"
+		wavetext_t = 60
 	end
 end
 
