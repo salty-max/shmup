@@ -41,7 +41,7 @@ function start_game()
 
 	bullets = {}
 	enemies = {}
-	explosions = {}
+	particles = {}
 
 	spawn_enemy()
 end
@@ -154,18 +154,34 @@ function spawn_enemy()
 		y = -8,
 		spd = 1,
 	  spr = 21,
-		hp = 5,
+		hp = 2,
 		scr = 30,
 		flash = 0
 	})
 end
 
 function explode(x, y)
-	add(explosions, {
+	add(particles, {
 		x = x,
 		y = y,
-		age = 1
+		vx = 0,
+		vy = 0,
+		age = 8,
+		max_age = 0,
+		size = 8
 	})
+	
+	for i = 1, 20 do
+		add(particles, {
+		x = x,
+		y = y,
+		vx = (rnd() - 0.5) * 4,
+		vy = (rnd() - 0.5) * 4,
+		age = rnd(2),
+		max_age = 10 + rnd(10),
+		size = 1 + rnd(3)
+	})
+	end 
 end
 
 -->8
@@ -266,7 +282,7 @@ function update_game()
 					score += enemy.scr
 					sfx(2)
 					del(enemies, enemy)
-					explode(enemy.x - 4, enemy.y - 4)
+					explode(enemy.x + 4, enemy.y + 4)
 					spawn_enemy()
 				else
 					score += 5
@@ -365,14 +381,7 @@ function draw_game()
 		circfill(player.x + 3, player.y - 2, muzzle, 7)
 	end
 
-	local exp_frames = {64, 64, 66, 68, 70, 72, 72}
-	for exp in all(explosions) do
-		spr(exp_frames[flr(exp.age)], exp.x, exp.y, 2, 2)
-		exp.age += 1
-		if exp.age > #exp_frames then
-			del(explosions, exp)
-		end
-	end 
+	draw_explosions()
 
 	draw_ui()
 
@@ -401,6 +410,44 @@ function draw_ui()
 			heartspr = 13
 		end
 		spr(heartspr, i * 9 - 7, 2)
+	end
+end
+
+function draw_explosions()
+	for p in all(particles) do
+		local pc = 7
+
+		if p.age > 5 then
+			pc = 10
+		end
+		if p.age > 7 then
+			pc = 9
+		end
+		if p.age > 10 then
+			pc = 8
+		end
+		if p.age > 12 then
+			pc = 2
+		end
+		if p.age > 15 then
+			pc = 5
+		end
+
+		circfill(p.x, p.y, p.size, pc)
+		p.x += p.vx
+		p.y += p.vy
+
+		p.vx *= 0.85
+		p.vy *= 0.85
+
+		p.age += 1
+
+		if p.age > p.max_age then
+			p.size -= 0.5
+			if p.size <= 0 then
+				del(particles, p)
+			end
+		end
 	end
 end
 
