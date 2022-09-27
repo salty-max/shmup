@@ -18,7 +18,6 @@ function start_screen()
 end
 
 function start_game()
-	music(-1, 2000)
 	t = 0
 	wave = 0
 
@@ -449,6 +448,7 @@ function update_start()
 
 	if btn_released then
 		if btnp(4) or btnp(5) then
+			music(0)
 			start_game()
 			btn_released = false
 		end
@@ -642,6 +642,7 @@ function next_wave()
 	wave += 1
 
 	if wave > 4 then
+		music(4)
 		mode = "win"
 	else
 		mode = "wavetext"
