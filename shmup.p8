@@ -42,7 +42,8 @@ function start_game()
 	bullets = {}
 	enemies = {}
 	particles = {}
-
+	shwaves = {}
+ 
 	spawn_enemy()
 end
 
@@ -160,10 +161,10 @@ function spawn_enemy()
 	})
 end
 
-function explode(x, y, blue)
+function explode(ex, ey, blue)
 	add(particles, {
-		x = x,
-		y = y,
+		x = ex,
+		y = ey,
 		vx = 0,
 		vy = 0,
 		age = 8,
@@ -174,8 +175,8 @@ function explode(x, y, blue)
 
 	for i = 1, 30 do
 		add(particles, {
-		x = x,
-		y = y,
+		x = ex,
+		y = ey,
 		vx = (rnd() - 0.5) * 4,
 		vy = (rnd() - 0.5) * 4,
 		age = rnd(2),
@@ -183,7 +184,31 @@ function explode(x, y, blue)
 		size = 1 + rnd(3),
 		blue = blue
 	})
-	end 
+	end
+
+	big_shwave(ex, ey)
+end
+
+function shwave(swx, swy)
+	add(shwaves, {
+		x = swx,
+		y = swy,
+		c = 9,
+		r = 3,
+		max_r = 6,
+		spd = 1 -- spread speed
+	})
+end
+
+function big_shwave(swx, swy)
+	add(shwaves, {
+		x = swx,
+		y = swy,
+		c = 6,
+		r = 3,
+		max_r = 25,
+		spd = 3.5 -- spread speed
+	})
 end
 
 function page_red(age)
@@ -324,6 +349,7 @@ function update_game()
 				del(bullets, bullet)
 				enemy.hp -= 1
 				enemy.flash = 2
+				shwave(bullet.x + 4, bullet.y + 4)
 				if enemy.hp <= 0 then
 					score += enemy.scr
 					sfx(2)
@@ -428,6 +454,7 @@ function draw_game()
 		circfill(player.x + 3, player.y - 2, muzzle, 7)
 	end
 
+	draw_shwaves()
 	draw_explosions()
 
 	draw_ui()
@@ -486,6 +513,16 @@ function draw_explosions()
 			if p.size <= 0 then
 				del(particles, p)
 			end
+		end
+	end
+end
+
+function draw_shwaves()
+	for sw in all(shwaves) do
+		circ(sw.x, sw.y, sw.r, sw.c)
+		sw.r += sw.spd
+		if sw.r > sw.max_r then
+			del(shwaves, sw)
 		end
 	end
 end
