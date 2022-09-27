@@ -160,7 +160,7 @@ function spawn_enemy()
 	})
 end
 
-function explode(x, y)
+function explode(x, y, blue)
 	add(particles, {
 		x = x,
 		y = y,
@@ -168,10 +168,11 @@ function explode(x, y)
 		vy = 0,
 		age = 8,
 		max_age = 0,
-		size = 8
+		size = 10,
+		blue = blue
 	})
-	
-	for i = 1, 20 do
+
+	for i = 1, 30 do
 		add(particles, {
 		x = x,
 		y = y,
@@ -179,9 +180,54 @@ function explode(x, y)
 		vy = (rnd() - 0.5) * 4,
 		age = rnd(2),
 		max_age = 10 + rnd(10),
-		size = 1 + rnd(3)
+		size = 1 + rnd(3),
+		blue = blue
 	})
 	end 
+end
+
+function page_red(age)
+	local c = 7
+
+	if age > 5 then
+		c = 10
+	end
+	if age > 7 then
+		c = 9
+	end
+	if age > 10 then
+		c = 8
+	end
+	if age > 12 then
+		c = 2
+	end
+	if age > 15 then
+		c = 5
+	end
+
+	return c
+end
+
+function page_blue(age)
+	local c = 7
+
+	if age > 5 then
+		c = 6
+	end
+	if age > 7 then
+		c = 12
+	end
+	if age > 10 then
+		c = 13
+	end
+	if age > 12 then
+		c = 1
+	end
+	if age > 15 then
+		c = 1
+	end
+
+	return c
 end
 
 -->8
@@ -298,6 +344,7 @@ function update_game()
 			if collide(enemy, player) then
 				sfx(1)
 				del(enemies, enemy)
+				explode(player.x + 4, player.y + 4, true)
 				lives -= 1
 				invul = invul_duration
 				spawn_enemy()
@@ -417,26 +464,18 @@ function draw_explosions()
 	for p in all(particles) do
 		local pc = 7
 
-		if p.age > 5 then
-			pc = 10
-		end
-		if p.age > 7 then
-			pc = 9
-		end
-		if p.age > 10 then
-			pc = 8
-		end
-		if p.age > 12 then
-			pc = 2
-		end
-		if p.age > 15 then
-			pc = 5
+		if p.blue then
+			pc = page_blue(p.age)
+		else
+			pc = page_red(p.age)
 		end
 
 		circfill(p.x, p.y, p.size, pc)
+
 		p.x += p.vx
 		p.y += p.vy
 
+		-- apply friction
 		p.vx *= 0.85
 		p.vy *= 0.85
 
