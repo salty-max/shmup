@@ -23,16 +23,7 @@ function start_game()
 
 	next_wave()
 
-	player = {
-		x = 60,
-		y = 60,
-		vx = 0,
-		vy = 0,
-		w = 1,
-		h = 1,
-		spd = 2,
-		spr = 3
-	}
+	player = spawn_player()
 
 	flamespr = 5
 
@@ -88,6 +79,32 @@ end
 -->8
 -- tools
 
+function create_entity(x, y)
+	return {
+		x = x,
+		y = y,
+		w = 8,
+		h = 8
+	}
+end
+
+function spawn_bullet(x, y)
+	local b = create_entity(x, y)
+	b.spd = 4
+	b.spr = 16
+	add(bullets, b)
+end
+
+function spawn_player()
+	local p = create_entity(60, 60)
+	p.vx = 0
+	p.vy = 0
+	p.spd = 3
+	p.spr = 2
+
+	return p
+end
+
 function create_star(x, y, spd, c)
 	local s = {
 		x = x,
@@ -137,7 +154,7 @@ function blink()
 end
 
 function draw_spr(s)
-	spr(s.spr, s.x, s.y, s.w, s.h)
+	spr(s.spr, s.x, s.y, s.w / 8, s.h / 8)
 end
 
 function draw_list(l)
@@ -334,14 +351,7 @@ function update_game()
 	-- shoot
 	if btn(5) then
 		if shoot_cd <= 0 then
-			add(bullets, {
-				x = player.x,
-				y = player.y - 4,
-				w = 1,
-				h = 1,
-				spd = 4,
-				spr = 16
-			})
+			spawn_bullet(player.x, player.y - 4)
 			sfx(0)
 			muzzle = 6
 			shoot_cd = fire_rate
@@ -522,15 +532,15 @@ function draw_game()
 		end
 	end
 
-	for enemy in all(enemies) do
-		if enemy.flash > 0 then
-			enemy.flash -= 1
+	for e in all(enemies) do
+		if e.flash > 0 then
+			e.flash -= 1
 			for i = 1, 15 do
 				pal(i, 7)
 			end
 		end
 
-		draw_spr(enemy)
+		draw_spr(e)
 
 		pal()
 	end
@@ -661,16 +671,11 @@ function next_wave()
 end
 
 function spawn_enemy(etype)
-	local e = {
-		x = flr(rnd(120)),
-		y = -8,
-		flash = 0,
-		spd = 1,
-		type = etype,
-		frame = 1,
-		w = 1,
-		h = 1
-	}
+	local e = create_entity(flr(rnd(112)), -8)
+	e.flash = 0
+	e.spd = 1
+	e.type = etype
+	e.frame = 1
 	 
 	if etype == nil or etype == 1 then
 		-- green alien
@@ -702,8 +707,8 @@ function spawn_enemy(etype)
 		e.anim = {144, 146}
 		e.scr = 100
 		e.hp = 50
-		e.w = 2
-		e.h = 2
+		e.w = 16
+		e.h = 16
 	end
 
 	add(enemies, e)
