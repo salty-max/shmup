@@ -6,6 +6,7 @@ __lua__
 function _init()
 	blinkt = 1
 	t = 0
+	lockout = 0
 	start_screen()
 
 	stars = {}
@@ -19,7 +20,7 @@ end
 
 function start_game()
 	t = 0
-	wave = 0
+	wave = 4
 
 	next_wave()
 
@@ -47,6 +48,7 @@ end
 
 function _update()
 	blinkt += 1
+	t += 1
 
 	if mode == "game" then
 		update_game()
@@ -154,7 +156,7 @@ function blink()
 end
 
 function draw_spr(s)
-	spr(s.spr, s.x, s.y, s.w / 8, s.h / 8)
+	spr(s.spr, s.x, s.y, ceil(s.w / 8), ceil(s.h / 8))
 end
 
 function draw_list(l)
@@ -166,13 +168,13 @@ end
 function collide(a, b)
 	local a_left = a.x
 	local a_top = a.y
-	local a_right = a.x + 7
-	local a_bottom = a.y + 7
+	local a_right = a.x + (a.w - 1)
+	local a_bottom = a.y + (a.h - 1)
 
 	local b_left = b.x
 	local b_top = b.y
-	local b_right = b.x + 7
-	local b_bottom = b.y + 7
+	local b_right = b.x + (b.w - 1)
+	local b_bottom = b.y + (b.h - 1)
 	
 	if a_left > b_right or b_left > a_right or a_top > b_bottom or b_top > a_bottom then
 		return false
@@ -306,7 +308,6 @@ end
 -- update
 
 function update_game()
-	t += 1
 	player.vx = 0
 	player.vy = 0
 	player.spr = 2
@@ -402,10 +403,6 @@ function update_game()
 					sfx(2)
 					del(enemies, e)
 					explode(e.x + 4, e.y + 4)
-
-					if #enemies <= 0 then
-						next_wave()
-					end
 				else
 					score += 5
 					sfx(3)
@@ -423,10 +420,6 @@ function update_game()
 				explode(player.x + 4, player.y + 4, true)
 				lives -= 1
 				invul = invul_duration
-
-				if #enemies <= 0 then
-					next_wave()
-				end
 			end
 		end
 	else
@@ -435,11 +428,8 @@ function update_game()
 
 	if (lives <= 0) then
 		mode = "gameover"
+		lockout = t + 30
 		music(6)
-	end
-
-	if btnp(4) then
-		mode = "gameover"
 	end
 
 	-- engine animation
@@ -452,6 +442,10 @@ function update_game()
 	-- muzzle flash
 	if muzzle > 0 then
 		muzzle -= 1
+	end
+
+	if mode == "game" and #enemies <= 0 then
+		next_wave()
 	end
 
 	-- stars animation
@@ -485,7 +479,8 @@ function update_wavetext()
 end
 
 function update_win()
-	update_starfield()
+	if t < lockout then return end
+
 	if not btn(4) and not btn(5) then
 		btn_released = true
 	end
@@ -499,8 +494,8 @@ function update_win()
 end
 
 function update_gameover()
-	update_starfield()
-
+	if t < lockout then return end
+	
 	if not btn(4) and not btn(5) then
 		btn_released = true
 	end
@@ -664,6 +659,7 @@ function next_wave()
 	if wave > 5 then
 		music(4)
 		mode = "win"
+		lockout = t + 30
 	else
 		if wave == 1 then
 			music(0)
@@ -711,7 +707,7 @@ function spawn_enemy(etype)
 		e.spr = 144
 		e.anim = {144, 146}
 		e.scr = 100
-		e.hp = 50
+		e.hp = 5
 		e.w = 16
 		e.h = 16
 	end
