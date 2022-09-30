@@ -20,7 +20,7 @@ end
 
 function start_game()
 	t = 0
-	wave = 0
+	wave = 3
 
 	next_wave()
 
@@ -644,15 +644,40 @@ end
 
 function spawn_wave()
 	if wave == 1 then
-		spawn_enemy(1)
+		place_enemies({
+			{0,1,1,1,1,1,1,1,1,0},
+			{0,1,1,1,1,1,1,1,1,0},
+			{0,1,1,1,1,1,1,1,1,0},
+			{0,1,1,1,1,1,1,1,1,0}
+		})
 	elseif wave == 2 then
-		spawn_enemy(2)
+		place_enemies({
+			{1,1,2,2,1,1,1,2,2,1},
+			{1,1,2,2,1,1,1,2,2,1},
+			{1,1,2,2,1,1,1,2,2,1},
+			{2,2,2,2,2,2,2,2,2,2}
+		})
 	elseif wave == 3 then
-		spawn_enemy(3)
+		place_enemies({
+			{3,3,1,1,1,1,1,1,3,3},
+			{3,3,0,0,1,1,0,0,3,3},
+			{3,3,0,0,2,2,0,0,3,3},
+			{3,3,2,2,2,2,2,2,3,3}
+		})
 	elseif wave == 4 then
-		spawn_enemy(4)
+		place_enemies({
+			{3,1,1,3,1,1,3,1,1,3},
+			{3,1,1,3,1,1,3,1,1,3},
+			{3,2,2,3,3,3,3,2,2,3},
+			{4,4,4,4,0,0,4,4,4,4}
+		})
 	elseif wave == 5 then
-		spawn_enemy(5)
+		place_enemies({
+			{0,0,0,0,0,0,0,0,0,0},
+			{0,0,0,0,5,0,0,0,0,0},
+			{0,0,0,0,0,0,0,0,0,0},
+			{0,0,0,0,0,0,0,0,0,0}
+		})
 	end
 end
 
@@ -674,10 +699,10 @@ function next_wave()
 	end
 end
 
-function spawn_enemy(etype)
-	local e = create_entity(flr(rnd(112)), -8)
+function spawn_enemy(etype, ex, ey)
+	local e = create_entity(ex, ey)
 	e.flash = 0
-	e.spd = 1
+	e.spd = 0
 	e.type = etype
 	e.frame = 1
 	 
@@ -716,6 +741,16 @@ function spawn_enemy(etype)
 	end
 
 	add(enemies, e)
+end
+
+function place_enemies(wave_list)
+	for y = 1, 4 do
+		for x = 1, 10 do
+			if wave_list[y][x] != 0 then
+				spawn_enemy(wave_list[y][x], x * 12 - 6, 4 + y * 12)
+			end
+		end
+	end
 end
 
 __gfx__
