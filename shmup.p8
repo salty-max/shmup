@@ -376,15 +376,19 @@ function update_game()
 
 	-- moving enemies
 	for e in all(enemies) do
-		e.y += e.spd
+		-- enemy mission
+		do_enemy(e)
 		
+		-- enemy animation
 		e.frame += 0.2
+
 		if flr(e.frame) > #e.anim then
 			e.frame = 1
 		end
 
 		e.spr = e.anim[flr(e.frame)]
 
+		-- enemy dies when leaving screen
 		if e.y > 128 then
 			del(enemies, e)
 		end
@@ -700,11 +704,14 @@ function next_wave()
 end
 
 function spawn_enemy(etype, ex, ey)
-	local e = create_entity(ex, ey)
+	local e = create_entity(ex, ey - 64)
+	e.posx = ex
+	e.posy = ey
 	e.flash = 0
-	e.spd = 0
+	e.spd = 1
 	e.type = etype
 	e.frame = 1
+	e.mission = "flyin"
 	 
 	if etype == nil or etype == 1 then
 		-- green alien
@@ -750,6 +757,23 @@ function place_enemies(wave_list)
 				spawn_enemy(wave_list[y][x], x * 12 - 6, 4 + y * 12)
 			end
 		end
+	end
+end
+
+-->8
+-- enemy behavior
+
+function do_enemy(e)
+	if e.mission == "flyin" then
+		e.y += e.spd
+
+		if e.y == e.posy then
+			e.mission = "protect"
+		end
+	elseif e.mission == "protect" then
+		-- todo
+	elseif e.mission == "attack" then
+		-- todo
 	end
 end
 
