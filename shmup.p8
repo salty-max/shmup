@@ -20,7 +20,7 @@ end
 
 function start_game()
 	t = 0
-	wave = 3
+	wave = 2
 
 	next_wave()
 
@@ -100,7 +100,7 @@ function spawn_bullet(x, y)
 end
 
 function spawn_player()
-	local p = create_entity(60, 60)
+	local p = create_entity(60, 96)
 	p.vx = 0
 	p.vy = 0
 	p.spd = 3
@@ -647,6 +647,7 @@ end
 -- waves and enemies
 
 function spawn_wave()
+	sfx(28)
 	if wave == 1 then
 		place_enemies({
 			{0,1,1,1,1,1,1,1,1,0},
@@ -703,41 +704,42 @@ function next_wave()
 	end
 end
 
-function spawn_enemy(etype, ex, ey)
-	local e = create_entity(ex, ey - 64)
-	e.posx = ex
-	e.posy = ey
+function spawn_enemy(type, x, y, wait_amt)
+	local e = create_entity(x * 1.25 - 16, y - 64)
+	e.posx = x
+	e.posy = y
 	e.flash = 0
 	e.spd = 1
-	e.type = etype
+	e.type = type
 	e.frame = 1
 	e.mission = "flyin"
+	e.wait = wait_amt
 	 
-	if etype == nil or etype == 1 then
+	if type == nil or type == 1 then
 		-- green alien
 		e.spr = 128
 		e.anim = {128, 129, 130, 131}
 		e.scr = 50
 		e.hp = 3
-	elseif etype == 2 then
+	elseif type == 2 then
 		-- hell bat
 		e.spr = 136
 		e.anim = {136, 137}
 		e.scr = 30
 		e.hp = 2
-	elseif etype == 3 then
+	elseif type == 3 then
 		-- rotator
 		e.spr = 132
 		e.anim = {132, 133, 134, 135}
 		e.scr = 50
 		e.hp = 3
-	elseif etype == 4 then
+	elseif type == 4 then
 		-- drill
 		e.spr = 138
 		e.anim = {138, 139}
 		e.scr = 40
 		e.hp = 2
-	elseif etype == 5 then
+	elseif type == 5 then
 		-- boss
 		e.spr = 144
 		e.anim = {144, 146}
@@ -754,7 +756,7 @@ function place_enemies(wave_list)
 	for y = 1, 4 do
 		for x = 1, 10 do
 			if wave_list[y][x] != 0 then
-				spawn_enemy(wave_list[y][x], x * 12 - 6, 4 + y * 12)
+				spawn_enemy(wave_list[y][x], x * 12 - 6, 4 + y * 12, x * 3)
 			end
 		end
 	end
@@ -764,10 +766,18 @@ end
 -- enemy behavior
 
 function do_enemy(e)
-	if e.mission == "flyin" then
-		e.y += e.spd
+	if e.wait > 0 then
+		e.wait -= 1
+		return
+	end
 
-		if e.y == e.posy then
+	if e.mission == "flyin" then
+		-- basic easing
+		e.x += (e.posx - e.x) / 8
+		e.y += (e.posy - e.y) / 8
+
+		if abs(e.y - e.posy) < 0.5 then
+			e.y = e.posy
 			e.mission = "protect"
 		end
 	elseif e.mission == "protect" then
@@ -894,6 +904,7 @@ __sfx__
 510c0000143151931520325143251931520315163251932516315183151932516325183151931516325183251b3151e315183251b3251e315183151b3251e325183151b3151d325183251b3151d315183251b325
 010c00000175001750017500175001750017500175001750037500375003750037500375003750037500375006750067500675006750067500675006750067500575005750057500575005750057500575005750
 010c00001d55024500245001b55519555245001e550245002450029500165502450024500245001e550245001e55024500245001d5551b555245001d5502450024500295001855024500275002a5002950028500
+10050000385623555233552255522f5522d5522b5522954227552265522355221552225521e5421d5421a5421854217542155421454212542105420e5420d5320b53209522075120551203512015120051200512
 __music__
 04 04050644
 00 07084749
